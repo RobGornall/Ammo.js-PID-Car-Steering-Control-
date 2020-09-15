@@ -1,0 +1,1199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<!--  
+Company: University of Edinburgh
+Engineer: Robert Gornall
+
+Create Date: 28-05-20
+Design Name: NAME STILL PENDING
+Project Name: MSc Project
+
+Tool Versions: 	Ammo.js release 0.0.3 Commit #309 13-07-2020
+				Three.js release 28-06-2020
+				OrbitControls.js Modified by me 20-06-2020
+				stats.js release 29-10-2016
+				Smoothie.js release 29-12-2017
+				Visual Studio Code v1.47.0 (user setup)
+				Google Chrome Version 83.0.4103.116 (Official Build) (64-bit)
+
+Description:	
+
+Dependencies:	ammo.js
+				three.min.js
+				stats.min.js
+				OrbitControls.js Modified by me
+				Detector.js
+				smoothie.js
+				DesignSpace.min.js
+ 
+Revision: 
+-->
+    <head>
+        <title>The PID Steering Experiment Tool</title>
+		<P>The fundamentals of PID control and Empirical PID Tuning</P>
+		
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+			/* In here ordinary HMTL comments break things */
+            body {
+                color: #61443e;
+                font-family:Monospace;
+                font-size:13px;
+                text-align:center;
+
+                background-color: #bfd1e5;
+				/* Avoids having scroll bars */
+                margin: 0px;
+				
+                overflow: hidden;
+            }
+			#speedometer {
+				color: #ffffff;
+				background-color: #ff0000;
+				position: absolute;
+				bottom: 0px;
+				padding: 5px;
+			}
+            #info {
+                position: absolute;
+                top: 0px; width: 100%;
+                padding: 5px;
+            }
+            /* no background colour it's transparent background -->*/
+			#MyButton{
+				position: absolute;
+				top: 255px; 
+				right: 50px;
+				padding: 5px;
+			}
+			#ReadSpace{	
+				position:absolute;
+				bottom: 442px;
+				right: 0px;
+				padding: 5px;
+			}
+			.Readclass{
+				background-color: #ffffff;
+				position: relative;
+				text-align: center;
+				color: #000000;
+			}
+			#timedelay {
+				color: #000000;
+				background-color: #00ff00;
+				position: absolute;
+				bottom: 100px;
+				right: 250px;
+			}
+			#peakval {
+				color: #000000;
+				background-color: #00ff00;
+				position: absolute;
+				bottom: 180px;
+				right: 250px;
+			}
+			#DesignSpace{	
+				z-index: 1;
+				position:absolute;
+				bottom: 0px;
+				right: 0px;
+				padding: 5px;
+			}
+			.container {
+				position: relative;
+				text-align: center;
+				color: rgb(0, 0, 0);
+			}
+			.SetpointEntry{
+				position: absolute;
+				top: 32%;
+				left: -3.2%;		
+			}
+			.KpOutEntry{
+				position: absolute;
+				top: 27%;
+				left: 20%;	
+			}
+			.KiOutEntry{
+				position: absolute;
+				top: 45%;
+				left: 20%;	
+			}
+			.KdOutEntry{
+				position: absolute;
+				top: 63%;
+				left: 20%;	
+			}
+			#mycanvas{
+				position:absolute;
+				top: 0px;
+				right: 0px;
+				padding: 5px;
+			}
+			
+        </style>
+    </head>
+    <body>
+        <div id="container"><br /><br /><br /><br /><br />Loading...</div>
+		<div id="speedometer">0.0 km/h</div>
+        <div id="info"> <br><br />Press W,A,S,D to move the camera, & C for the handbrake </div>
+		<div id="MyButton"><button onclick="ButtonScript()">Click me</button></div>
+		
+		<div id="DesignSpace">
+			
+			<div class="container">
+				<img src="Design Space Background.png" alt="Background" style="width:100%" >
+				<div class="SetpointEntry">
+					<button onclick="EnableEdit()">Edit</button>
+					<form action="	">
+						<label for="SPset">SetPoint:</label><br>
+						<input type="number" id="SPset" name="SPset" value="0.0" style= width:40%><br>
+						
+						<input type="submit" value="Submit">
+					  </form> 
+				</div>
+				<div class="KpOutEntry">
+					<button onclick="EnableEdit()">Edit</button>
+					<form action="">
+						<label for="SPset">Kp:</label><br>
+						<input type="number" id="SPset" name="SPset" value="0.0" style= width:40%><br>
+						
+						<input type="submit" value="Submit">
+					  </form> 
+				</div>
+				<div class="KiOutEntry">
+					<button onclick="EnableEdit()">Edit</button>
+					<form action="">
+						<label for="SPset">Ki:</label><br>
+						<input type="number" id="SPset" name="SPset" value="0.0" style= width:40%><br>
+						
+						<input type="submit" value="Submit">
+					  </form> 
+				</div>
+				<div class="KdOutEntry">
+					<button onclick="EnableEdit()">Edit</button>
+					<form action="">
+						<label for="SPset">Kd:</label><br>
+						<input type="number" id="SPset" name="SPset" value="0.0" style= width:40%><br>
+						
+						<input type="submit" value="Submit">
+					  </form> 
+				</div>
+			</div>
+			
+		</div>
+		
+		<div id="ReadSpace">
+			<div id="timedelay">0.0 s</div>
+			<div id="peakval">0.0 x</div>
+			<!-- <canvas id="Readcanvas" width="450" height="248"></canvas> -->
+			
+			<div class="Readclass">
+				
+			</div>
+		</div>
+
+		<script src="ammo.js"></script>
+
+        <script src="three.min.js"></script>
+        <script src="OrbitControlsRobEdit.js"></script>
+        <script src="Detector.js"></script>
+		<script src="stats.min.js"></script>
+		
+		<script type="text/javascript" src="smoothie.js"></script>
+		<canvas id="mycanvas" width="700" height="250"></canvas>
+		
+		<script src="DesignSpace.js"></script>
+		<script src="SimplePID.js"></script>
+
+		<script>
+
+		Ammo().then(function(Ammo) {
+
+			//<!--display: block; min-width: 800px; min-height: 300px; -->
+			// Detects webgl
+			if ( ! Detector.webgl ) {
+				Detector.addGetWebGLMessage();
+				document.getElementById( 'container' ).innerHTML = "";
+			}
+			function onSubmit(){
+				console.log("Submitted");
+			};
+
+			var vehicleSteering = 0;
+			var IcontrolOUT = 0;
+			var PcontrolOUT = 0;
+			var DcontrolOUT = 0;
+
+			var IcontrolIN = 0;
+			var PcontrolIN = 0;
+			var DcontrolIN = 0;
+
+//-----------------------------------SMOOTHIE CHART-----------------------------------------------------
+			//TODO add steering ANGLE! to the graph
+			var smoothie = new SmoothieChart({
+                grid: { strokeStyle:'rgb(0, 0, 0)',
+                        fillStyle:'rgb(255, 255, 255)',
+                        lineWidth: 1,
+                        millisPerLine: 1000,
+                        verticalSections: 6, 
+                        },
+				labels: { fillStyle:'rgb(255, 0, 0)' },
+				maxValue:34,
+				minValue:-34,
+				horizontalLines:[	{color:'#00ff00',lineWidth:5,value:0},
+									{color:'#000088',lineWidth:5,value:31},
+									{color:'#000088',lineWidth:5,value:-31}]
+            });
+
+			//Add the chart to the canvas
+            smoothie.streamTo(document.getElementById("mycanvas"));
+			// New lines on the line graph
+			var CurCarPosX = new TimeSeries();
+			var CurCarSteer = new TimeSeries();
+			var FrontCar = new TimeSeries();
+			var BackCar = new TimeSeries();
+			
+			// Setting up the data
+            setInterval(function() {
+				CurCarPosX.append(new Date().getTime(), window.CurrX);
+				CurCarSteer.append(new Date().getTime(), (vehicleSteering*100)*(-1));
+				FrontCar.append(new Date().getTime(), (window.CurrX + window.Opp)*2);
+				BackCar.append(new Date().getTime(), (window.CurrX - window.Opp)*2);
+
+            }, 100);
+            //setInterval time is the sample rate in milliseconds
+			//Smooth the smoothie chart
+            smoothie.streamTo(document.getElementById("mycanvas"), 100 /*delay*/);
+			
+			//smoothie.addTimeSeries(SetPointLine,
+            //{ strokeStyle:'rgb(255, 0, 0)', lineWidth:5 });
+            smoothie.addTimeSeries(CurCarPosX,
+			{ strokeStyle:'rgb(255, 0, 0)', lineWidth:2 });
+			
+			smoothie.addTimeSeries(CurCarSteer,
+            { strokeStyle:'rgb(88, 0, 0)', lineWidth:2 });
+			/*
+			smoothie.addTimeSeries(FrontCar,
+			{ strokeStyle:'rgb(255, 0, 255)', lineWidth:2 });
+
+			smoothie.addTimeSeries(BackCar,
+			{ strokeStyle:'rgb(0, 0, 255)', lineWidth:2 });		
+			
+			*/
+//-----------------------------------SMOOTHIE CHART END--------------------------------------------------
+
+			// - Global variables -
+			var DISABLE_DEACTIVATION = 4;
+			var TRANSFORM_AUX = new Ammo.btTransform();
+			var ZERO_QUATERNION = new THREE.Quaternion(0, 0, 0, 1);
+
+			// Graphics variables
+			var container, stats, speedometer;
+			var camera, controls, scene, renderer;
+			var terrainMesh, texture;
+			var clock = new THREE.Clock();
+			var materialDynamic, materialStatic, materialInteractive, MYmaterialStatic, MYmaterialDynamic;
+
+			// Physics variables
+			var collisionConfiguration;
+			var dispatcher;
+			var broadphase;
+			var solver;
+			var physicsWorld;
+
+			var syncList = [];
+			var time = 0;
+			var objectTimePeriod = 3;
+			var timeNextSpawn = time + objectTimePeriod;
+			var maxNumObjects = 30;
+
+			// Keybord actions
+			var actions = {};
+			var keysActions = {
+				"KeyC":'Handbrake',
+				"KeyP":'GetVal',
+			};
+
+			// - Functions -
+
+			function initGraphics() {
+
+				container = document.getElementById( 'container' );
+				speedometer = document.getElementById( 'speedometer' );
+				button = document.getElementById('MyButton');
+				//THREE.js Setup
+				scene = new THREE.Scene();
+				//THREE's Camera Setup TypeofCamera(FOV, Aspect Ratio, Near Plane, Far Plane)
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 2000 );
+				//Camera initial position
+				camera.position.x = -63;
+				camera.position.y = 55;
+				camera.position.z = -67;
+				//camera.rotation.y = Math.PI/2; //PI/2=90°
+				//THREE.Vector3(X, Y, Z)
+				//camera.lookAt( new THREE.Vector3( 0.33, -0.40, 0.85 ) );
+				controls = new THREE.OrbitControls( camera );
+				//THREE rendererer
+				renderer = new THREE.WebGLRenderer({antialias:true});
+				//Clear colour basically background colour
+				renderer.setClearColor( 0xbfd1e5 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				//Here we add both ambient light and directional light
+				var ambientLight = new THREE.AmbientLight( 0x404040 );
+				scene.add( ambientLight );
+				var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+				//Adds more shadows and shine from a particular direction
+				dirLight.position.set( 10, 10, 5 );
+				scene.add( dirLight );
+				//The mesh controls how light hits the object and its depth
+				materialDynamic = new THREE.MeshPhongMaterial( { color:0xfca400 } );
+				materialStatic = new THREE.MeshPhongMaterial( { color:0x999999 } );
+				materialInteractive=new THREE.MeshPhongMaterial( { color:0x990000 } );
+				MYmaterialStatic = new THREE.MeshPhongMaterial( { color:0x0C10EE } );
+				MYmaterialDynamic = new THREE.MeshPhongMaterial( { color:0x7700CC } );
+				container.innerHTML = "";
+				//Canvas element with renderer settings (seen in elements Chrome Console)
+				container.appendChild( renderer.domElement );
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+				//Event Listener to resize the render for changing the window size
+				window.addEventListener( 'resize', onWindowResize, false );
+				window.addEventListener( 'keydown', keydown);
+				window.addEventListener( 'keyup', keyup);
+			}
+			// The rest of the code to resize the render 
+			function onWindowResize() {
+				//Aspect ratiio adjusts
+				camera.aspect = window.innerWidth / window.innerHeight;
+				//Necessary line for updates
+				camera.updateProjectionMatrix();
+				//Render size adjusts
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function initPhysics() {
+
+				// Physics configuration
+				collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+				dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
+				broadphase = new Ammo.btDbvtBroadphase();
+				solver = new Ammo.btSequentialImpulseConstraintSolver();
+				physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
+				physicsWorld.setGravity( new Ammo.btVector3( 0, -9.82, 0 ) );
+				
+			}
+			//PID Record
+			var Setpoint = 0;
+			var FrErrArray = [];
+			var CGErrArray = [];
+			
+			//Sim Record
+			var TimeArray = [];
+			var XPosArray = [];
+
+			//System Analysis
+			var DisturbanceFlag = 0;
+			var PeakValJ = -100; //here J as there's a HTML peakval
+			var XPosTime = [];
+			var CurrtimeS = 0;
+			var FinalVal = 0;
+			var OverShoot = 0;
+			var t1 = 0;
+			var t2 = 0;
+			var TimeDelay = 0;
+			var TimeConst = 0;
+			var PeakedFlag = 0;
+			var SecondPeakJ = 0;
+			var SecondPeakTime = [];
+			var SecondPeakFlag = 0;
+			var QuarterFlag = 0;
+
+			//GhostBrum The ghost car that demonstrates Icontrol window limit
+			var ZPosArray = [];
+			var YawArray = [];
+			function GhostBrumMesh(w, l, h) {
+				var GhostBrumShape = new THREE.BoxGeometry(w, 1, h, 1, 1, 1);
+				var GhostBrumMat = new THREE.MeshPhongMaterial({color:0x9999c4});
+				var mesh = new THREE.Mesh(GhostBrumShape, GhostBrumMat);
+				GhostCabin = new THREE.Mesh(new THREE.BoxGeometry(w,l*1.5,h*0.5), GhostBrumMat)
+				GhostCabin.position.y = l*1.1;
+				mesh.add(GhostCabin);
+				scene.add(mesh);
+				return mesh;
+			}
+
+			function OmegaPoleMesh (w,l,h){
+				var Pole = new THREE.CylinderGeometry(w, l, h);
+				var Mat = new THREE.MeshPhongMaterial({color:0x00ffff});
+				var mesh = new THREE.Mesh(Pole, Mat);
+				ArrowOmega = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5), Mat);
+				mesh.rotation.x = Math.PI/2;
+				ArrowOmega.position.y = l*3.7;
+				mesh.add(ArrowOmega);
+				scene.add(mesh);
+				return mesh;
+			}
+			
+			var GhostBrumToggle = 0;
+			var FrBkPolesToggle = 1;
+			var OmegaArrowToggle = 0;
+
+			function tick() {
+				requestAnimationFrame( tick );
+				//Time variable used for the sync function
+
+				window.oldx = window.CurrX;
+		
+				FrErrArray.push(Setpoint - (window.CurrX + window.Opp));
+				/*BkErrArray.push(Setpoint - (window.CurrX - window.Opp));
+				The Back array has been changed to the CG Array as it's effect 
+				flaws the system with the need for CG overshoot and it's effect is oscillatory if neglegible
+				*/
+				CGErrArray.push(Setpoint - (window.CurrX));
+
+
+				TimeArray.push( new Date().getTime());
+				XPosArray.push(window.CurrX);
+				ZPosArray.push(window.CurrZ);
+				YawArray.push(window.CurrYaw);
+				//console.log(YawArray[YawArray.length-1]*(180/Math.PI)) Result is Z axis = 0 !
+				//console.log(ZPosArray[ZPosArray.length-2]-ZPosArray[ZPosArray.length-1]); Speed is 0.2 on average between 0.15-0.3
+
+				//Date time is the real world time so we need an application specific time in seconds
+				if(new Date().getSeconds()){
+					CurrtimeS++;	
+				}
+				
+				//System Analysis
+				
+				/*The final value is easiest as it's just when the system has settled, here we'll round to whole numbers and 
+				perform a check for 70 positions back in the X position array
+				
+				if( Math.round(XPosArray[XPosArray.length-1]) == Math.round(XPosArray[XPosArray.length-70]) ){
+					FinalVal = window.CurrX;
+				}
+				if(FinalVal != 0){
+					console.log("FinalVal= ",FinalVal.toFixed(2));
+					console.log("OverShoot= ", OverShoot.toFixed(2),"%");
+				}
+
+				OverShoot = ((PeakValJ - FinalVal)/FinalVal)*100;
+				*/
+
+				var previousX = XPosArray[XPosArray.length-2];
+				//The disturbance/s haven't occured yet = True
+				if(DisturbanceFlag == 0){
+					//The car has begun moving towards the line = True
+					if(window.CurrX - previousX != 0){
+						//X pos is increasing and not yet peaked = True
+						if( (window.CurrX > PeakValJ) && (window.CurrX > previousX) ){
+							PeakValJ = XPosArray[XPosArray.length-1];
+							XPosTime.push( CurrtimeS );
+							/*
+							Time Delay = 1.3*t1 - 0.29*t2 
+							Where: 	t1 is the time when y is 35.3% of the peak
+									t2 is the time when y is 85.3% of the peak
+							*/
+							
+							t1 = Math.abs(XPosTime[Math.round(XPosTime.length*0.353)]);
+							t2 = Math.abs(XPosTime[Math.round(XPosTime.length*0.853)]);
+							TimeDelay = ((1.3*t1) - (0.29*t2));
+							TimeConst = 0.67*(t2-t1);
+							
+						}
+						//X pos has peaked and we just want to print the results
+						if( (window.CurrX < PeakValJ) && (PeakedFlag == 0) ){
+							console.log("t1= ",t1," t2= ",t2);
+							console.log("Xpostimelength= ", XPosTime.length );
+							console.log("TimeDelay= ", TimeDelay );
+							console.log("TimeConst= ", TimeConst);
+							PeakedFlag = 1;
+						}
+						//Once X has peaked once we need the second peak value
+						//X pos has peaked once already & rising again & second peak val hasn't been topped = True
+						if( (PeakedFlag==1) && (window.CurrX > previousX) && (window.CurrX > SecondPeakJ) ){
+							SecondPeakJ = window.CurrX;
+							SecondPeakTime.push(CurrtimeS);
+						}
+						//Again X pos has peaked a second time and we want the results
+						if((window.CurrX < SecondPeakJ) && (SecondPeakFlag == 0) && (SecondPeakJ != 0)){
+							console.log("SecondPeakJ= ",SecondPeakJ)
+							console.log("PeakDiff= ", PeakValJ - SecondPeakJ);
+							console.log("Pcr= ", SecondPeakTime[SecondPeakTime.length-1]-XPosTime[XPosTime.length-1] );
+							SecondPeakFlag = 1;
+						}
+					}
+				}
+				//Critical P checks for sustained oscillations
+				if( (PeakValJ != 0) && (SecondPeakJ != 0) ){
+					if( (Math.round(SecondPeakJ)/Math.round(PeakValJ)) >= 0.75 ){
+						console.log("1/4 Decay Oscillations or Greater");
+						console.log("Decay= ", (Math.round(SecondPeakJ)/Math.round(PeakValJ)));
+					}
+				}
+				//Setting HTML Readouts
+				timedelay.innerHTML = 'Time Delay= ' + (TimeDelay < 0 ? 'Error?' : TimeDelay.toFixed(2) + 'Sec');
+				peakval.innerHTML = 'Peak Value= ' + PeakValJ.toFixed(2) + 'm';
+
+				//System Analysis End
+
+				
+				
+				//The Car's Ribbon Trail
+				GhostRibbon = new THREE.Mesh(
+							//Top Radius, bottom radius, length 
+							new THREE.CylinderGeometry(0.2, 0.2, 2),
+							new THREE.MeshPhongMaterial({color:0x990000})
+				);
+				GhostRibbon.position.x = (window.CurrX);
+				GhostRibbon.position.y = 0;
+				GhostRibbon.position.z = window.CurrZ;
+				if(CurrtimeS > 10){
+					scene.add(GhostRibbon);
+				}
+				
+				
+				if(FrBkPolesToggle == 1){
+					//Front and Back poles to demo varable sparation of front and back X pos
+					FrontOppPole.position.x = (window.CurrX + window.Opp);
+					FrontOppPole.position.y = 1;
+					FrontOppPole.position.z = window.CurrZ;
+					
+					BackOppPole.position.x = (window.CurrX - window.Opp);
+					BackOppPole.position.y = 1;
+					BackOppPole.position.z = window.CurrZ;
+
+				}
+				if(OmegaArrowToggle == 1){
+					OmegaPole.position.x = window.CurrX;
+					OmegaPole.position.y = 2;
+					OmegaPole.position.z = window.CurrZ;
+					//OmegaPole.rotation.z = window.CurrYaw;
+				}
+				
+				
+				if(GhostBrumToggle == 1){
+					//GhostBrum to demo I control window
+					GhostBrum.position.z = ZPosArray[ZPosArray.length-10];
+					/* Here we'll replicate what IOUT control sees, the most previous case
+						we need to replicate:	CGErrArray.push(Setpoint - (window.CurrX - window.Opp));
+						which uses: 			Math.sin((chassisMesh.rotation.y))*2
+					*/	
+					GhostBrum.position.x = ( XPosArray[XPosArray.length-10] - (Math.sin(YawArray[YawArray.length-10])*2) );
+					GhostBrum.position.y = 0.6;
+					GhostBrum.rotation.y = YawArray[YawArray.length-10];
+					
+				}
+				
+				
+				var dt = clock.getDelta();
+				for (var i = 0; i < syncList.length; i++)
+					syncList[i](dt);
+				physicsWorld.stepSimulation( dt, 10 );
+				controls.update( dt );
+				//responsible for actually rendering the Scene and Camera
+				renderer.render( scene, camera );
+				//increases time with each tick
+				time += dt;
+				stats.update();
+				
+			}
+
+			function keyup(e) {
+				if(keysActions[e.code]) {
+					actions[keysActions[e.code]] = false;
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				}
+			}
+			function keydown(e) {
+				if(keysActions[e.code]) {
+					actions[keysActions[e.code]] = true;
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				}
+			}
+			
+
+			function createBox(pos, quat, w, l, h, mass, friction) {
+				var material = mass > 0 ? materialDynamic : materialStatic;
+				//For just a basic shape
+				var shape = new THREE.BoxGeometry(w, l, h, 1, 1, 1);
+				var geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
+
+				if(!mass) mass = 0;
+				if(!friction) friction = 1;
+				//Used to create the box's actual shape.
+				var mesh = new THREE.Mesh(shape, material);
+				mesh.position.copy(pos);
+				mesh.quaternion.copy(quat);
+				scene.add( mesh );
+
+				var transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+				transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+				var motionState = new Ammo.btDefaultMotionState(transform);
+
+				var localInertia = new Ammo.btVector3(0, 0, 0);
+				geometry.calculateLocalInertia(mass, localInertia);
+
+				var rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
+				var body = new Ammo.btRigidBody(rbInfo);
+
+				body.setFriction(friction);
+				//body.setRestitution(.9);
+				//body.setDamping(0.2, 0.2);
+
+				physicsWorld.addRigidBody( body );
+
+				if (mass > 0) {
+					body.setActivationState(DISABLE_DEACTIVATION);
+					// Sync physics and graphics
+					function sync(dt) {
+						var ms = body.getMotionState();
+						if (ms) {
+							ms.getWorldTransform(TRANSFORM_AUX);
+							var p = TRANSFORM_AUX.getOrigin();
+							var q = TRANSFORM_AUX.getRotation();
+							mesh.position.set(p.x(), p.y(), p.z());
+							mesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
+						}
+					}
+
+					syncList.push(sync);
+				}
+			}
+			
+			function createMYOWNBox(pos, quat, w, l, h, mass, friction) {
+				var material = mass > 0 ? MYmaterialDynamic : MYmaterialStatic;
+				var shape = new THREE.BoxGeometry(w, l, h, 1, 1, 1);
+				var geometry = new Ammo.btBoxShape(new Ammo.btVector3(w * 0.5, l * 0.5, h * 0.5));
+
+				if(!mass) mass = 0;
+				if(!friction) friction = 1;
+
+				var mesh = new THREE.Mesh(shape, material);
+				mesh.position.copy(pos);
+				mesh.quaternion.copy(quat);
+				scene.add( mesh );
+
+				var transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+				transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+				var motionState = new Ammo.btDefaultMotionState(transform);
+
+				var localInertia = new Ammo.btVector3(0, 0, 0);
+				geometry.calculateLocalInertia(mass, localInertia);
+
+				var rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, geometry, localInertia);
+				var body = new Ammo.btRigidBody(rbInfo);
+
+				body.setFriction(friction);
+				//body.setRestitution(.9);
+				//body.setDamping(0.2, 0.2);
+
+				physicsWorld.addRigidBody( body );
+
+				if (mass > 0) {
+					body.setActivationState(DISABLE_DEACTIVATION);
+					// Sync physics and graphics
+					function sync(dt) {
+						var ms = body.getMotionState();
+						if (ms) {
+							ms.getWorldTransform(TRANSFORM_AUX);
+							var p = TRANSFORM_AUX.getOrigin();
+							var q = TRANSFORM_AUX.getRotation();
+							mesh.position.set(p.x(), p.y(), p.z());
+							mesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
+						}
+					}
+
+					syncList.push(sync);
+				}
+			}
+
+			function createChromeWheelMesh(radius, width) {
+				var t = new THREE.CylinderGeometry(radius, radius, width, 24, 1);
+				t.rotateZ(Math.PI / 2);
+				var mesh = new THREE.Mesh(t, new THREE.MeshBasicMaterial({color:0x000000}));
+				//												  ((TopRad),(BottomRad),(Height),(RadSegments),(HeightSeg),(Mesh{colour})).RotateZ(180°)	
+				mesh.add(new THREE.Mesh(new THREE.CylinderGeometry((radius*0.75), (radius*0.75), (width*1.1), 24, 1), (new THREE.MeshPhongMaterial({color:0xc7d3d4}))).rotateZ(Math.PI/2));
+				scene.add(mesh);
+				return mesh;
+			}
+
+			function createBoxChassisMesh(w, l, h) {
+				var shape = new THREE.BoxGeometry(w, 1, h, 1, 1, 1);
+				CarMeshMat = new THREE.MeshPhongMaterial({color:0x990000});
+				var mesh = new THREE.Mesh(shape, CarMeshMat);
+				Cabin = new THREE.Mesh(new THREE.BoxGeometry(w,l*1.5,h*0.5), CarMeshMat)
+				Cabin.position.y = l*1.1;
+				mesh.add(Cabin);
+				scene.add(mesh);
+				return mesh;
+			}
+			
+			
+			function createRedBrum(pos, quat) {
+
+				// Vehicle contants
+				var chassisWidth = 1.8;
+				var chassisHeight = 0.6;
+				var chassisLength = 4;
+				var massVehicle = 1000;
+
+				var wheelAxisPositionBack = -1;
+				var wheelRadiusBack = .4;
+				var wheelWidthBack = .3;
+				var wheelHalfTrackBack = 1;
+				var wheelAxisHeightBack = .3;
+
+				var wheelAxisFrontPosition = 1.7;
+				var wheelHalfTrackFront = 1;
+				var wheelAxisHeightFront = .3;
+				var wheelRadiusFront = .35;
+				var wheelWidthFront = .2;
+
+				var friction = 1000;
+				var suspensionStiffness = 30.0;
+				var suspensionDamping = 2.3;
+				var suspensionCompression = 4.4;
+				var suspensionRestLength = 0.6;
+				var rollInfluence = 0.2;
+				//
+				var steeringIncrement = .08	;
+				//Made this smaller to decrease the turning circle
+				var steeringClamp = .075
+				var maxEngineForce = 2000;
+				var maxBreakingForce = 100;
+
+				// Chassis
+				var geometry = new Ammo.btBoxShape(new Ammo.btVector3(chassisWidth * .5, chassisHeight * .5, chassisLength * .5));
+				var transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+				transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+				var motionState = new Ammo.btDefaultMotionState(transform);
+				var localInertia = new Ammo.btVector3(0, 0, 0);
+				geometry.calculateLocalInertia(massVehicle, localInertia);
+				var body = new Ammo.btRigidBody(new Ammo.btRigidBodyConstructionInfo(massVehicle, motionState, geometry, localInertia));
+				body.setActivationState(DISABLE_DEACTIVATION);
+				physicsWorld.addRigidBody(body);
+				var chassisMesh = createBoxChassisMesh(chassisWidth, chassisHeight, chassisLength);
+
+				// Raycast Vehicle
+				var engineForce = 0;
+				//var vehicleSteering = 0;
+				var breakingForce = 0;
+				var tuning = new Ammo.btVehicleTuning();
+				var rayCaster = new Ammo.btDefaultVehicleRaycaster(physicsWorld);
+				var vehicle = new Ammo.btRaycastVehicle(tuning, body, rayCaster);
+				vehicle.setCoordinateSystem(0, 1, 2);
+				physicsWorld.addAction(vehicle);
+
+				// Wheels
+				var FRONT_LEFT = 0;
+				var FRONT_RIGHT = 1;
+				var BACK_LEFT = 2;
+				var BACK_RIGHT = 3;
+				var wheelMeshes = [];
+				var wheelDirectionCS0 = new Ammo.btVector3(0, -1, 0);
+				var wheelAxleCS = new Ammo.btVector3(-1, 0, 0);
+
+				function addWheel(isFront, pos, radius, width, index) {
+
+					var wheelInfo = vehicle.addWheel(
+							pos,
+							wheelDirectionCS0,
+							wheelAxleCS,
+							suspensionRestLength,
+							radius,
+							tuning,
+							isFront);
+
+					wheelInfo.set_m_suspensionStiffness(suspensionStiffness);
+					wheelInfo.set_m_wheelsDampingRelaxation(suspensionDamping);
+					wheelInfo.set_m_wheelsDampingCompression(suspensionCompression);
+					wheelInfo.set_m_frictionSlip(friction);
+					wheelInfo.set_m_rollInfluence(rollInfluence);
+
+					wheelMeshes[index] = createChromeWheelMesh(radius, width);
+				}
+
+				addWheel(true, new Ammo.btVector3(wheelHalfTrackFront, wheelAxisHeightFront, wheelAxisFrontPosition), wheelRadiusFront, wheelWidthFront, FRONT_LEFT);
+				addWheel(true, new Ammo.btVector3(-wheelHalfTrackFront, wheelAxisHeightFront, wheelAxisFrontPosition), wheelRadiusFront, wheelWidthFront, FRONT_RIGHT);
+				addWheel(false, new Ammo.btVector3(-wheelHalfTrackBack, wheelAxisHeightBack, wheelAxisPositionBack), wheelRadiusBack, wheelWidthBack, BACK_LEFT);
+				addWheel(false, new Ammo.btVector3(wheelHalfTrackBack, wheelAxisHeightBack, wheelAxisPositionBack), wheelRadiusBack, wheelWidthBack, BACK_RIGHT);
+
+
+				
+				
+				// Sync keybord actions, physics and graphics
+				function sync(dt) {
+					
+					var speed = vehicle.getCurrentSpeedKmHour();
+					speedometer.innerHTML = (speed < 0 ? '(R) ' : '') + Math.abs(speed).toFixed(1) + ' m/s';
+					
+					breakingForce = 0;
+					engineForce = 0;
+
+					window.CurrX = chassisMesh.position.x;
+				
+					window.CurrZ = chassisMesh.position.z;
+					
+					window.Opp = Math.sin((chassisMesh.rotation.y))*2;	
+
+					window.CurrYaw = chassisMesh.rotation.y;
+
+					//Press P to Print
+					if (actions.GetVal){
+						try{
+							console.log("X= ", window.CurrX );
+							//console.log("Front ", window.CurrX + window.Opp);
+							//console.log("Back ", window.CurrX - window.Opp);
+							//console.log(Opp);
+							//console.log("Cam X= ",camera.position.x);
+							//console.log("Cam Y= ",camera.position.y);
+							//console.log("Cam Z= ",camera.position.z);
+							//console.log(camera.rotation);
+							//console.log(" ");
+							
+							//console.log(Math.sign(trackObjectX));
+							//console.log(CurrErrorX);
+							//console.log("X =", trackObjectX.toFixed(1));
+							//console.log("Y =", trackObjectY.toFixed(1));
+							
+							//console.log("Z =", window.CurrZ.toFixed(1));
+							
+							//console.log("OldX =",window.oldx.toFixed(1));
+							//console.log("Diff= ", (trackObjectX - window.oldx));
+							//console.log("PredicX =", PredicX)
+
+							//console.log("Steer =", vehicleSteering);
+							//console.log("P = ", Pcontrol);
+							//console.log("I = ", window.Icontrol);
+							//console.log("D = ", Dcontrol);
+
+							//console.log("XPosArray= ", XPosArray);
+							//console.log("XPosTime= ", XPosTime);
+						}
+						finally{
+							console.log("Done");
+						}
+						
+					}
+
+					//Press C to apply Handbrake
+					if (actions.Handbrake) {
+						console.log(output);
+						if (speed != 0)
+							breakingForce = maxBreakingForce+100;
+						else	engineForce = maxEngineForce;
+								//rollInfluence = 0;
+					}
+
+					//Velocity Z contant +-0.01 'm/s'
+					var KpS = 1;
+					var SpeedSet = 40;
+					engineForce = ((SpeedSet - speed)*KpS)*maxEngineForce;
+					//Speed checks
+					if(speed > SpeedSet)
+						breakingForce = maxBreakingForce;
+					if(speed < 0)
+						breakingForce = maxBreakingForce;
+					
+					//PID OUTER
+					/*	
+					Wrong
+					var KpOUT = 23.4;
+					var KiOUT = KpOUT*(1/20);
+					var KdOUT = KpOUT*5;
+					var KpIN = 0.0;
+					var KiIN = 0.0;
+					var KdIN = 0.3;
+					
+					Trial & Error
+					var KpOUT = 0.0025;
+					var KiOUT = 0.0005;
+					var KdOUT = 14;
+					var KpIN = 0.0;
+					var KiIN = 0.0;
+					var KdIN = 0.3;
+					
+					Z-N Calc'd
+					@KdIN = 0.3
+					Kcr = 0.002
+					Kp = 0.0012
+					Ki = 0.000003269
+					Kd = 0.1101
+
+					Trial & Error
+					KpOUT = 0.003;
+					KiOUT = 0.0001;
+					KdOUT = 7;
+					KpIN = 0.0;
+					KiIN = 0.0;
+					KdIN = 4;
+
+					Z-N Calc'd
+					@KdIN = 4 = 0.76 decay
+					Kcr = 0.02
+					Kp = 0.012
+					Ki = 0.00006
+					Kd = 0.6
+
+					*/
+					var KpOUT = 0.012;
+					var KiOUT = 0.00006;
+					var KdOUT = 0.6;
+					
+					PcontrolOUT =	((CGErrArray[CGErrArray.length-1])*KpOUT);
+					
+					IcontrolOUT =	((CGErrArray[CGErrArray.length-1])*KiOUT) +
+									((CGErrArray[CGErrArray.length-2])*KiOUT) +
+									((CGErrArray[CGErrArray.length-3])*KiOUT) + 
+									((CGErrArray[CGErrArray.length-4])*KiOUT) +
+									((CGErrArray[CGErrArray.length-5])*KiOUT) +
+									((CGErrArray[CGErrArray.length-6])*KiOUT) +
+									((CGErrArray[CGErrArray.length-7])*KiOUT) +
+									((CGErrArray[CGErrArray.length-8])*KiOUT) +
+									((CGErrArray[CGErrArray.length-9])*KiOUT) +
+									((CGErrArray[CGErrArray.length-10])*KiOUT)
+									;
+
+					DcontrolOUT = 	KdOUT*( 
+									((CGErrArray[CGErrArray.length-2])
+									-
+									(CGErrArray[CGErrArray.length-1]))
+									/
+									(TimeArray[TimeArray.length-2]-TimeArray[TimeArray.length-1])
+									);
+					
+					//End of PID OUTER
+
+					//PID INNER
+					/*	
+					Kp = 
+					Ki = 
+					Kd = 0.3
+					*/
+					var KpIN = 0.0;
+					var KiIN = 0.0;
+					var KdIN = 4;
+					
+					PcontrolIN =	((FrErrArray[FrErrArray.length-1])*KpIN);
+
+					IcontrolIN =	((FrErrArray[FrErrArray.length-1])*KiIN) +
+									((FrErrArray[FrErrArray.length-2])*KiIN) +
+									((FrErrArray[FrErrArray.length-3])*KiIN) + 
+									((FrErrArray[FrErrArray.length-4])*KiIN) +
+									((FrErrArray[FrErrArray.length-5])*KiIN) +
+									((FrErrArray[FrErrArray.length-6])*KiIN) +
+									((FrErrArray[FrErrArray.length-7])*KiIN) +
+									((FrErrArray[FrErrArray.length-8])*KiIN) +
+									((FrErrArray[FrErrArray.length-9])*KiIN) +
+									((FrErrArray[FrErrArray.length-10])*KiIN)
+									;
+
+								
+					DcontrolIN = 	KdIN*( 
+									((FrErrArray[FrErrArray.length-2])
+									-
+									(FrErrArray[FrErrArray.length-1]))
+									/
+									(TimeArray[TimeArray.length-2]-TimeArray[TimeArray.length-1])
+									);
+					
+					//End of PID INNER
+					
+					//Steering
+					if(isNaN( (PcontrolOUT + IcontrolOUT + DcontrolOUT) + (PcontrolIN + IcontrolIN + DcontrolIN) ) == true){
+						vehicleSteering = 0;	
+					}
+					else{
+						vehicleSteering = (PcontrolOUT + IcontrolOUT + DcontrolOUT) + (PcontrolIN + IcontrolIN + DcontrolIN) ;
+					}
+
+					//end of steering
+
+					vehicle.applyEngineForce(engineForce, BACK_LEFT);
+					vehicle.applyEngineForce(engineForce, BACK_RIGHT);
+
+					vehicle.setBrake(breakingForce / 2, FRONT_LEFT);
+					vehicle.setBrake(breakingForce / 2, FRONT_RIGHT);
+					vehicle.setBrake(breakingForce, BACK_LEFT);
+					vehicle.setBrake(breakingForce, BACK_RIGHT);
+
+					vehicle.setSteeringValue(vehicleSteering, FRONT_LEFT);
+					vehicle.setSteeringValue(vehicleSteering, FRONT_RIGHT);
+
+					var tm, p, q, i;
+					var n = vehicle.getNumWheels();
+					for (i = 0; i < n; i++) {
+						vehicle.updateWheelTransform(i, true);
+						tm = vehicle.getWheelTransformWS(i);
+						p = tm.getOrigin();
+						q = tm.getRotation();
+						wheelMeshes[i].position.set(p.x(), p.y(), p.z());
+						wheelMeshes[i].quaternion.set(q.x(), q.y(), q.z(), q.w());
+					}
+
+					tm = vehicle.getChassisWorldTransform();
+					p = tm.getOrigin();
+					q = tm.getRotation();
+					chassisMesh.position.set(p.x(), p.y(), p.z());
+					chassisMesh.quaternion.set(q.x(), q.y(), q.z(), q.w());
+					//End of sync for RedBrum
+				}
+			//End of createRedBrum
+			syncList.push(sync);
+			}
+
+			function createObjects() {
+				
+				var LineLength = 600
+				//The floor!! (Xpos, Ypos, Zpos),Quaternion,(Xsize, Ysize, Zsize, Type/Mass, Friction)
+				createBox(new THREE.Vector3(0, -0.5, (LineLength/2)-37.5), ZERO_QUATERNION, 75, 1, LineLength, 0, 2);
+				//the variable is set to apply as a quaternion for multiplication in rotation 
+				var quaternion = new THREE.Quaternion(0, 0, 0, 1);
+				//the variable has an angle set in negative radions to the X axis
+				quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI /25);
+				
+				/*createBox(new THREE.Vector3(Xpos, Ypos, Zpos),
+				{quaternion= the angle setup, ZERO_QUATERNION = no angle},
+				Xsize, Ysize, Zsize, 
+				{<0=solid ridgid}, >0= solid with collision);
+				*/
+
+				/*
+				//First Ramp
+				createMYOWNBox(new THREE.Vector3(27, 0, -25), quaternion, 10, 1, 10, 0);
+				//variables setup
+				var Xoffset = 72;
+				var Zoffset = -18;
+				var size = .75;
+				var nw = 8 + Xoffset;
+				var nh = 6;
+				//for loops to create a stack of boxes based on the counts for width, nw, and height, nh
+				for (var j = 0 + Xoffset; j < nw; j++)
+					for (var i = 0; i < nh; i++)
+						createBox(new THREE.Vector3(size * j - (size * (nw - 1)) / 2,
+									size * i,
+									Zoffset),
+									ZERO_QUATERNION,
+									size, size, size, 10);
+				*/
+				
+				//just for spawning the car at a position with or without rotation
+				//Remember posistion is a Vector!!
+				createRedBrum(new THREE.Vector3(-20, 1, -35), ZERO_QUATERNION);
+				
+				//XBarriers
+				createMYOWNBox(new THREE.Vector3(37, 0.5, (LineLength/2)-37.5), ZERO_QUATERNION, 1, 2, LineLength, 0, 2);
+				createMYOWNBox(new THREE.Vector3(-37, 0.5, (LineLength/2)-37.5), ZERO_QUATERNION, 1, 2, LineLength, 0, 2);
+				//ZBarriers
+				createMYOWNBox(new THREE.Vector3(0, 0.5, LineLength-38), ZERO_QUATERNION, 75, 2, 0, 0, 2);
+				createMYOWNBox(new THREE.Vector3(0, 0.5, -37), ZERO_QUATERNION, 75, 2, 0, 0, 2);
+				
+				//THE LINE!!
+				GhostLine = new THREE.Mesh(
+					new THREE.BoxGeometry(0.2,0.5,LineLength),
+					new THREE.MeshPhongMaterial({color:0x0000ff})
+				);
+				GhostLine.position.x = 0;
+				GhostLine.position.y = 0;
+				GhostLine.position.z = (LineLength/2)-37.5;
+				scene.add( GhostLine );
+				
+				FrontOppPole = new THREE.Mesh(
+					//Top Radius, bottom radius, length 
+					new THREE.CylinderGeometry(0.2, 0.2, 1),
+					new THREE.MeshPhongMaterial({color:0xf6ff00})
+				);
+				
+
+
+				BackOppPole = new THREE.Mesh(
+					//Top Radius, bottom radius, length 
+					new THREE.CylinderGeometry(0.2, 0.2, 1),
+					new THREE.MeshPhongMaterial({color:0xff6a00})
+				);
+				
+
+				if(FrBkPolesToggle == 1){
+					scene.add(FrontOppPole);
+					scene.add(BackOppPole);
+				}
+				
+				if(OmegaArrowToggle == 1){
+					OmegaPole = new OmegaPoleMesh (0.2,0.2,1);
+				}
+				
+				if(GhostBrumToggle == 1){
+					GhostBrum = new GhostBrumMesh(1.8,0.6,4);
+				}
+				
+
+			}
+
+			// - Init -
+			initGraphics();
+			initPhysics();
+			createObjects();
+			tick();
+
+		});
+
+        </script>
+    </body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Look I just wanted more space for my portrait monitor,sorry -->
+</html>
